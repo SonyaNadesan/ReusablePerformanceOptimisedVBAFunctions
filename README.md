@@ -20,4 +20,4 @@ the tasks involved include:
 •  Validation system has made users less reliant on GenSight's support team.
 
 In the aim to make re-usable and optimised functions, I decided to make my own set of functions to deal with some common problems VBA 
-developers may face when developing new functionalities.
+developers may face when developing new functionalities. 
