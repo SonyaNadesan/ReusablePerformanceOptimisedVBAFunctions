@@ -1,0 +1,371 @@
+Attribute VB_Name = "ErrorDetection"
+'Sonya - Error Detection & Suggestion Feature
+
+Function invalidInput(ByVal selected As Range, ByVal options As Range, ByVal issue As String, ByVal sheetname As String, Optional ByVal nameColumn = "n/a")
+    Dim s As String
+    Dim o As String
+    Dim i As Integer
+    Dim j As Integer
+    Dim iLimit As Integer
+    Dim jLimit As Integer
+    Dim results As String
+    
+    iLimit = selected.Count
+    jLimit = options.Count
+    With Worksheets(selected.Worksheet.name)
+    For i = 1 To iLimit
+        Dim selectedItem As Range
+        Set selectedItem = selected(i)
+        s = selectedItem.Value
+        For j = 1 To jLimit
+            o = options(j).Value
+            'if a mtach is found, the input is valid, move onto the next input
+            If s = o Then
+                j = jLimit + 1
+            Else
+                'if input has been compared to all options, add it to the validation sheet
+                If j = options.Count And s <> Empty Then
+                        results = suggestions(s, options)
+                        Dim issue2 As String
+                        If nameColumn <> "n/a" Then
+                            issue2 = issue & " (" & .Range(nameColumn & selectedItem.row) & ")"
+                        End If
+                        Call updateValidationSheet(issue2, sheetname, selectedItem.address, s, results)
+                        results = vbNullString
+                End If
+            End If
+        Next j
+    Next i
+    End With
+End Function
+Function invalidInput_multiSelect(ByVal selected As Range, ByVal options As Range, ByVal issue As String, ByVal sheetname As String, Optional ByVal nameColumn = "n/a", Optional ByVal delimeter = ";")
+    Dim s As String
+    Dim o As String
+    Dim i As Integer
+    Dim j As Integer
+    Dim iLimit As Integer
+    Dim jLimit As Integer
+    Dim results As String
+    
+    iLimit = selected.Count
+    jLimit = options.Count
+    With Worksheets(selected.Worksheet.name)
+    For i = 1 To iLimit
+        Dim selectedItem As Range
+        Set selectedItem = selected(i)
+        s = selectedItem.Value
+        Dim sArray() As String
+        sArray = Split(s, delimeter)
+        Dim str As Variant
+        Dim position As Integer
+        position = 0
+        For Each str In sArray
+            position = position + 1
+            For j = 1 To jLimit
+            o = options(j).Value
+            'if a mtach is found, the input is valid, move onto the next input
+            If str = o Then
+                j = jLimit + 1
+            Else
+                'if input has been compared to all options, add it to the validation sheet
+                If j = options.Count And s <> Empty Then
+                        results = suggestions(str, options)
+                        Dim issue2 As String
+                        If nameColumn <> "n/a" Then
+                            issue2 = issue & " - Entry at position " & position & " (" & .Range(nameColumn & selectedItem.row) & ")"
+                        End If
+                        Call updateValidationSheet(issue2, sheetname, selectedItem.address, s, results)
+                        results = vbNullString
+                End If
+            End If
+        Next j
+        Next str
+    Next i
+    End With
+End Function
+Function suggestions(ByVal key As String, ByVal rangeOfData As Range) As String
+    Dim result As String
+    result = vbNullString
+    Dim cell As Range
+    'prevent case-sensitivity
+    key = UCase(key)
+    'key length
+    Dim keyLen As Integer
+    keyLen = Len(key)
+    'get abbreviated key
+    Dim abbr As String
+    abbr = abbreviation(key)
+    For Each cell In rangeOfData
+        'prevent case-sesitivity
+        word = UCase(cell.Value)
+        Dim abbr_cell As String
+        abbr_cell = abbreviation(word)
+        If abbr = word Or abbr_cell = key Then
+            result = result & word & ", "
+        Else
+            'check if the key contains the word or vice versa
+            If (InStr(key, word) > 0 Or InStr(word, key) > 0) Then
+                result = result & word & ", "
+            Else
+                'check if the key is an anagram of the word
+                If is_Anagram(key, word, False) <> False Then
+                    result = result & word & ", "
+                Else
+                    'check if abbreviated key is an anagram of abbreviated word or whether abbreviated key is an anagram of the word
+                    If Len(abbr_cell) > 1 Then
+                        If is_Anagram(abbr, abbr_cell, False) <> False Then
+                            result = result & word & ", "
+                        End If
+                    End If
+                End If
+            End If
+        End If
+    Next cell
+    suggestions = result
+    'suggestions = UCase(Replace(result, ",,", ","))
+End Function
+Function abbreviation(ByVal key As String) As String
+    Dim abbr As String
+    abbr = vbNullString
+    'add space to prevent program from crashing
+    key = key & " "
+    'split the keyword by space
+    Dim keySplit() As String
+    keySplit = Split(UCase(key), " ")
+    Dim i As Integer
+    Dim lenKeySplit As Integer
+    lenKeySplit = UBound(keySplit)
+    'iterate through each item
+    For i = 0 To lenKeySplit
+        'concatenate the first letter of each item
+        abbr = abbr & Mid(keySplit(i), 1, 1)
+    Next i
+    abbreviation = abbr
+End Function
+Function is_Anagram(ByVal key As String, ByVal word As String, Optional ByVal exactMatch As Boolean = True) As Boolean
+    Dim i As Integer
+    Dim noOfRemainingChars As Integer
+    Dim big As String
+    Dim small As String
+    Dim lenSmall As Integer
+    Dim lenBig As Integer
+    Dim lenKey As Integer
+    Dim lenWord As Integer
+    is_Anagram = False
+    
+    lenKey = Len(key)
+    lenWord = Len(word)
+
+    'find out which has the least number of characters
+    If lenKey > lenWord Then
+        big = key
+        small = word
+        lenSmall = lenWord
+        lenBig = lenKey
+    Else
+        big = word
+        small = key
+        lenSmall = lenKey
+        lenBig = lenWord
+    End If
+    
+    If lenBig = lenSmall Or lenBig = (lenSmall + 1) Then
+        If exactMatch = True Then
+            noOfRemainingChars = 0
+        Else
+            noOfRemainingChars = 1
+        End If
+        'reducs number of loops by iterating through the shorter value
+        For i = 1 To lenSmall
+            Dim letter As String
+            letter = Mid(small, i, 1)
+            big = Replace(big, letter, "", Count:=1)
+        Next i
+    
+        If Len(big) <= noOfRemainingChars Then
+            is_Anagram = True
+        Else
+            is_Anagram = False
+        End If
+    End If
+End Function
+Function findExtremeValues(ByVal sheetname As String, ByVal rangeAsString As String, ByVal minimumVal As Integer, ByVal maxVal As Integer, Optional ByVal min_messageBeforeValue = "Extreme Value - Minimum value is ", Optional ByVal min_messageAfterValue = vbNullString, Optional ByVal max_messageBeforeValue = "Extreme Value - Maximum value is ", Optional ByVal max_messageAfterValue = vbNullString, Optional ByVal nameColumn = "n/a") As Integer
+    Dim r As Range
+    Dim cell As Range
+    With Worksheets(sheetname)
+        Set r = .Range(rangeAsString)
+        Dim counter As Integer
+        counter = 0
+        For Each cell In r
+            Dim name As String
+            If nameColumn <> "n/a" Then
+                name = " (" & .Range(nameColumn & cell.row) & ")"
+            End If
+            If cell.Value <> vbNullString Then
+                If cell.Value < minimumVal Then
+                    Call updateValidationSheet(min_messageBeforeValue & minimumVal & min_messageAfterValue & " " & name, sheetname, cell.address, cell.Value, "")
+                    counter = counter + 1
+                Else
+                    If cell.Value > maxVal Then
+                        Call updateValidationSheet(max_messageBeforeValue & maxVal & max_messageAfterValue & " " & name, sheetname, cell.address, cell.Value, "")
+                        counter = counter + 1
+                    End If
+                End If
+            End If
+        Next cell
+    End With
+    findExtremeValues = counter
+End Function
+Function findExtremeValues_where_dataEntryRangeIsDifferentToInputRange(ByVal sheetname As String, ByVal rangeAsString As String, ByVal minimumVal As Integer, ByVal maxVal As Integer, ByVal dataEntry_sheetname As String, ByVal dataEntry_range As String, Optional ByVal min_messageBeforeValue = "Extreme Value - Minimum value is ", Optional ByVal min_messageAfterValue = vbNullString, Optional ByVal max_messageBeforeValue = "Extreme Value - Maximum value is ", Optional ByVal max_messageAfterValue = vbNullString, Optional ByVal nameColumn = "n/a") As Integer
+    Dim r As Range
+    Dim dataEntryRange As Range
+    Dim cell As Range
+    With Worksheets(sheetname)
+        Set r = .Range(rangeAsString)
+        Set dataEntryRange = Worksheets(dataEntry_sheetname).Range(dataEntry_range)
+        Dim counter As Integer
+        Dim entryCell As Range
+        counter = 0
+        Dim cellCounter As Integer
+        cellCounter = 1
+        For Each cell In r
+            Dim name As String
+            If nameColumn <> "n/a" Then
+                name = " (" & .Range(nameColumn & cell.row) & ")"
+            End If
+            If cell.Value <> vbNullString Then
+                If cell.Value < minimumVal Then
+                    Set entryCell = dataEntryRange.Cells(cellCounter)
+                    Call updateValidationSheet(min_messageBeforeValue & minimumVal & min_messageAfterValue & " " & name, sheetname, entryCell.address, entryCell.Value, "")
+                    counter = counter + 1
+                Else
+                    If cell.Value > maxVal Then
+                        Set entryCell = dataEntryRange.Cells(cellCounter)
+                        Call updateValidationSheet(max_messageBeforeValue & maxVal & max_messageAfterValue & " " & name, sheetname, entryCell.address, entryCell.Value, "")
+                        counter = counter + 1
+                    End If
+                End If
+            End If
+            cellCounter = cellCounter + 1
+        Next cell
+    End With
+    findExtremeValues_where_dataEntryRangeIsDifferentToInputRange = counter
+End Function
+Function quickValidateRequiredFieldsInCorrespondingTables(ByRef ranges() As Range, ByRef tblNames() As String, Optional ByVal nameColumn = "n/a")
+    Dim i As Integer
+    Dim j As Integer
+    Dim k As Integer
+    Dim rangCount As Integer
+    rangCount = (UBound(ranges) - LBound(ranges)) - 1
+    
+    For i = 0 To rangCount
+        Dim table As Range
+        Set table = ranges(i)
+        Dim cellCount As Integer
+        cellCount = table.Cells.Count
+        For j = 1 To cellCount
+            Dim c As Range
+            Set c = table.Cells(j)
+            If c = vbNullString Then
+                If WorksheetFunction.CountA("I" & c.row & ":T" & c.row, "AJ" & c.row & ":AU" & c.row, "BI" & c.row & ":BT" & c.row, "BV" & c.row & ":CG" & c.row, "CG" & c.row & ":CT" & c.row) = 0 Then
+                    j = j + 11
+                Else
+                    For k = 0 To rangCount
+                        If k <> i Then
+                            Dim table2 As Range
+                            Set table2 = ranges(k)
+                            Dim cell As Range
+                            Set cell = table2.Cells(j)
+                            If cell <> vbNullString Then
+                                Dim name As String
+                                If nameColumn <> "n/a" Then
+                                    name = "(" & Worksheets(c.Worksheet.name).Range(nameColumn & c.row) & ")"
+                                End If
+                                Call updateValidationSheet("Missing Value in Correpsonding Cell - " & tblNames(i) & " " & name, table.Worksheet.name, c.address, c.Value, "")
+                            End If
+                        End If
+                    Next k
+                End If
+            End If
+        Next j
+    Next i
+End Function
+Function quickValidateRequiredFieldsInCorrespondingTables_MsgBox(ByRef arr_ranges() As Range, ByRef tblNames() As String, ByVal sheetname As String, Optional ByVal colLetter_names As String = "n/a", Optional ByVal rowNum_headers As String = "n/a", Optional ByVal displayMsgBox = True)
+    Dim i As Integer
+    Dim j As Integer
+    Dim table As Range
+    Dim lboundArrRanges As Integer
+    lboundArrRanges = LBound(arr_ranges)
+    Dim uboundArrRanges As Integer
+    uboundArrRanges = UBound(arr_ranges) - 1
+    Dim result As String
+    Dim messageCount As Integer
+    messageCount = 0
+    
+    'loop though ranges
+    For i = lboundArrRanges To uboundArrRanges
+        'get table at position i
+        Set table = arr_ranges(i)
+        Dim col As Range
+        'track the column that is being looking at
+        Dim column As Integer
+        column = 0
+        result = vbNullString
+        'loop though columns in table
+        For Each col In table.columns
+            'increment column by 1
+            column = column + 1
+            Dim cell As Range
+            'keep track of the row that is being looked at
+            Dim row As Integer
+            row = 0
+            'loo through cells in column
+            For Each cell In col.Cells
+                'increment row by 1
+                row = row + 1
+                'check if the cell is blank
+                If cell = vbNullString Then
+                    Dim table2 As Range
+                    'loop through ranges
+                    For j = lboundArrRanges To uboundArrRanges
+                        'get table at position j
+                        Set table2 = arr_ranges(j)
+                        'prevent a table being compared to itself
+                        If table.address <> table2.address Then
+                            Dim cell2 As Range
+                            'get cell at corresponding position
+                            Set cell2 = table2.Cells(row, column)
+                            'check if the corresponding cell is not blank
+                            If cell2 <> vbNullString Then
+                                Dim label1 As String
+                                Dim label2 As String
+                                With Worksheets(sheetname)
+                                    If colLetter_names <> "n/a" Then
+                                        label1 = .Range(colLetter_names & cell.row)
+                                    End If
+                                    If rowNum_headers <> "n/a" Then
+                                        label2 = .Range(getColumnAsLetter(cell.address) & rowNum_headers)
+                                    End If
+                                End With
+                                'add result to array
+                                If result = vbNullString Then
+                                    result = "Missing information for " & tblNames(i) & " for " & ":"
+                                End If
+                                result = result & vbNewLine & label1 & " for " & label2
+                                'once a non-empty corresponding cell is found, exit the loop to move onto the next row to prevent duplicate results
+                                j = uboundArrRanges
+                            End If
+                        End If
+                    Next j
+                End If
+            Next cell
+        Next col
+        If result <> vbNullString Then
+            If displayMsgBox = True Then
+                Call MsgBox(result)
+            End If
+            messageCount = messageCount + 1
+        End If
+    Next i
+    quickValidateRequiredFieldsInCorrespondingTables_MsgBox = messageCount
+End Function
