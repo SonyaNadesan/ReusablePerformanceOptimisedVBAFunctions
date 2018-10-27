@@ -1,23 +1,36 @@
 Attribute VB_Name = "ValidationSheetFunctions"
 'Sonya - Validation Sheet
 
-Function updateValidationSheet(ByVal issue As String, ByVal sheetname As String, ByVal address As String, ByVal currentVal As String, ByVal suggestedValues As String)
+Function updateValidationSheet(ByVal issue As String, ByVal sheetname As String, ByVal address As String, ByVal currentVal As String, ByVal suggestedvalues As String, Optional ByVal checkForDuplicatesBeforeUpdate = False)
     Dim row As Integer
     With Worksheets("Validation")
         row = .Range("B1").Value + 3
         Dim newRowAsCSV As String
-        newRowAsCSV = issue & "," & sheetname & "," & address & "," & currentVal & "," & suggestedValues
-        If doesRowExistInRange_whereRowISsProvidedAsACSV(.Range("A2:E" & (row - 1)), newRowAsCSV) = False Then
-            .Range("B1").Value = (row - 2)
-            .Range("A" & row) = issue
-            .Range("B" & row) = sheetname
-            .Range("C" & row) = address
-            .Range("D" & row) = currentVal
-            .Range("E" & row) = suggestedValues
+        newRowAsCSV = issue & "," & sheetname & "," & address & "," & currentVal & "," & suggestedvalues
+        If checkForDuplicatesBeforeUpdate = False Then
+            Call addIssue(row, issue, sheetname, address, currentVal, suggestedvalues)
+        Else
+            If doesRowExistInRange_whereRowISsProvidedAsACSV(.Range("A2:E" & (row - 1)), newRowAsCSV) = False Then
+                Call addIssue(row, issue, sheetname, address, currentVal, suggestedvalues)
+            End If
         End If
         'createNavigateButtons (Worksheets("Validation").Range("B1").Value)
     End With
 End Function
+Sub addIssue(ByVal row As Integer, ByVal issue As String, ByVal sheetname As String, ByVal address As String, ByVal currentVal As String, ByVal suggestedvalues As String)
+    With Worksheets("Validation")
+        .Range("B1").Value = (row - 2)
+        .Range("A" & row) = issue
+        .Range("B" & row) = sheetname
+        .Range("C" & row) = address
+        If currentVal <> vbNullString Then
+            .Range("D" & row) = currentVal
+        End If
+        If suggestedvalues <> vbNullString Then
+            .Range("E" & row) = suggestedvalues
+        End If
+    End With
+End Sub
 Sub ClearIssues()
     With Worksheets("Validation")
         .Cells.ClearContents

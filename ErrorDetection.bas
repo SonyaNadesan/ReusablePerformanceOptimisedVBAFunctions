@@ -84,6 +84,8 @@ Function invalidInput_multiSelect(ByVal selected As Range, ByVal options As Rang
     End With
 End Function
 Function suggestions(ByVal key As String, ByVal rangeOfData As Range) As String
+    Dim isAdvancedSearchOn As Boolean
+    isAdvancedSearchOn = True
     Dim result As String
     result = vbNullString
     Dim cell As Range
@@ -95,6 +97,8 @@ Function suggestions(ByVal key As String, ByVal rangeOfData As Range) As String
     'get abbreviated key
     Dim abbr As String
     abbr = abbreviation(key)
+    Dim abbrLen As Integer
+    abbrLen = Len(abbr)
     For Each cell In rangeOfData
         'prevent case-sesitivity
         word = UCase(cell.Value)
@@ -103,18 +107,29 @@ Function suggestions(ByVal key As String, ByVal rangeOfData As Range) As String
         If abbr = word Or abbr_cell = key Then
             result = result & word & ", "
         Else
-            'check if the key contains the word or vice versa
-            If (InStr(key, word) > 0 Or InStr(word, key) > 0) Then
-                result = result & word & ", "
+            'check if the key contains the word or vice versa; check if smaller string is contained in the bigger string as the reverse is impossible
+            Dim big As String
+            big = word
+            Dim small As String
+            small = key
+            If keyLen > Len(word) Then
+                big = key
+                small = word
+            End If
+            If InStr(big, small) > 0 Then
+                result = word & ", "
+                isAdvancedSearchOn = False
             Else
-                'check if the key is an anagram of the word
-                If is_Anagram(key, word, False) <> False Then
-                    result = result & word & ", "
-                Else
-                    'check if abbreviated key is an anagram of abbreviated word or whether abbreviated key is an anagram of the word
-                    If Len(abbr_cell) > 1 Then
-                        If is_Anagram(abbr, abbr_cell, False) <> False Then
-                            result = result & word & ", "
+                If isAdvancedSearchOn = True Then
+                    'check if the key is an anagram of the word
+                    If is_Anagram(key, word, False) <> False Then
+                        result = result & word & ", "
+                    Else
+                        'check if abbreviated key is an anagram of abbreviated word or whether abbreviated key is an anagram of the word
+                        If Len(abbr_cell) > 1 Then
+                            If is_Anagram(abbr, abbr_cell, False) <> False Then
+                                result = result & word & ", "
+                            End If
                         End If
                     End If
                 End If
@@ -122,24 +137,25 @@ Function suggestions(ByVal key As String, ByVal rangeOfData As Range) As String
         End If
     Next cell
     suggestions = result
-    'suggestions = UCase(Replace(result, ",,", ","))
 End Function
 Function abbreviation(ByVal key As String) As String
     Dim abbr As String
     abbr = vbNullString
-    'add space to prevent program from crashing
-    key = key & " "
-    'split the keyword by space
-    Dim keySplit() As String
-    keySplit = Split(UCase(key), " ")
-    Dim i As Integer
-    Dim lenKeySplit As Integer
-    lenKeySplit = UBound(keySplit)
-    'iterate through each item
-    For i = 0 To lenKeySplit
-        'concatenate the first letter of each item
-        abbr = abbr & Mid(keySplit(i), 1, 1)
-    Next i
+    If InStr(key, " ") = False Then
+        abbr = Mid(key, 1, 1)
+    Else
+        'split the keyword by space
+        Dim keySplit() As String
+        keySplit = Split(UCase(key), " ")
+        Dim i As Integer
+        Dim lenKeySplit As Integer
+        lenKeySplit = UBound(keySplit)
+        'iterate through each item
+        For i = 0 To lenKeySplit
+            'concatenate the first letter of each item
+            abbr = abbr & Mid(keySplit(i), 1, 1)
+        Next i
+    End If
     abbreviation = abbr
 End Function
 Function is_Anagram(ByVal key As String, ByVal word As String, Optional ByVal exactMatch As Boolean = True) As Boolean
@@ -198,15 +214,18 @@ Function findExtremeValues(ByVal sheetname As String, ByVal rangeAsString As Str
         counter = 0
         For Each cell In r
             Dim name As String
-            If nameColumn <> "n/a" Then
-                name = " (" & .Range(nameColumn & cell.row) & ")"
-            End If
             If cell.Value <> vbNullString Then
                 If cell.Value < minimumVal Then
+                    If nameColumn <> "n/a" Then
+                        name = " (" & .Range(nameColumn & cell.row) & ")"
+                    End If
                     Call updateValidationSheet(min_messageBeforeValue & minimumVal & min_messageAfterValue & " " & name, sheetname, cell.address, cell.Value, "")
                     counter = counter + 1
                 Else
                     If cell.Value > maxVal Then
+                        If nameColumn <> "n/a" Then
+                            name = " (" & .Range(nameColumn & cell.row) & ")"
+                        End If
                         Call updateValidationSheet(max_messageBeforeValue & maxVal & max_messageAfterValue & " " & name, sheetname, cell.address, cell.Value, "")
                         counter = counter + 1
                     End If
@@ -230,17 +249,20 @@ Function findExtremeValues_where_dataEntryRangeIsDifferentToInputRange(ByVal she
         cellCounter = 1
         For Each cell In r
             Dim name As String
-            If nameColumn <> "n/a" Then
-                name = " (" & .Range(nameColumn & cell.row) & ")"
-            End If
             If cell.Value <> vbNullString Then
                 If cell.Value < minimumVal Then
                     Set entryCell = dataEntryRange.Cells(cellCounter)
+                    If nameColumn <> "n/a" Then
+                        name = " (" & .Range(nameColumn & cell.row) & ")"
+                    End If
                     Call updateValidationSheet(min_messageBeforeValue & minimumVal & min_messageAfterValue & " " & name, sheetname, entryCell.address, entryCell.Value, "")
                     counter = counter + 1
                 Else
                     If cell.Value > maxVal Then
                         Set entryCell = dataEntryRange.Cells(cellCounter)
+                        If nameColumn <> "n/a" Then
+                            name = " (" & .Range(nameColumn & cell.row) & ")"
+                        End If
                         Call updateValidationSheet(max_messageBeforeValue & maxVal & max_messageAfterValue & " " & name, sheetname, entryCell.address, entryCell.Value, "")
                         counter = counter + 1
                     End If
@@ -267,9 +289,6 @@ Function quickValidateRequiredFieldsInCorrespondingTables(ByRef ranges() As Rang
             Dim c As Range
             Set c = table.Cells(j)
             If c = vbNullString Then
-                If WorksheetFunction.CountA("I" & c.row & ":T" & c.row, "AJ" & c.row & ":AU" & c.row, "BI" & c.row & ":BT" & c.row, "BV" & c.row & ":CG" & c.row, "CG" & c.row & ":CT" & c.row) = 0 Then
-                    j = j + 11
-                Else
                     For k = 0 To rangCount
                         If k <> i Then
                             Dim table2 As Range
@@ -281,11 +300,10 @@ Function quickValidateRequiredFieldsInCorrespondingTables(ByRef ranges() As Rang
                                 If nameColumn <> "n/a" Then
                                     name = "(" & Worksheets(c.Worksheet.name).Range(nameColumn & c.row) & ")"
                                 End If
-                                Call updateValidationSheet("Missing Value in Correpsonding Cell - " & tblNames(i) & " " & name, table.Worksheet.name, c.address, c.Value, "")
+                                Call updateValidationSheet("Missing Value in Correpsonding Cell - " & tblNames(i) & " " & name, table.Worksheet.name, c.address, c.Value, "", True)
                             End If
                         End If
                     Next k
-                End If
             End If
         Next j
     Next i

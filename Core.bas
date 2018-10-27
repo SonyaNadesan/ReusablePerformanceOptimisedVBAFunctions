@@ -212,8 +212,8 @@ Function lastNonEmptyCellAddressInRow(ByVal rangeAsString As String, ByVal sheet
 End Function
 Function doesRowExistInRange(ByVal tbl As Range, ByVal rowAsRange As Range) As Boolean
     Dim rowInTbl As Range
-    Dim result As Boolean
-    result = False
+    Dim finalResult As Boolean
+    finalResult = False
     Dim lastRowNum As Integer
     Dim colCount As Integer
     colCount = tbl.columns.Count
@@ -221,19 +221,20 @@ Function doesRowExistInRange(ByVal tbl As Range, ByVal rowAsRange As Range) As B
         Dim counter As Integer
         For counter = 1 To colCount
             If rowInTbl.Cells(counter) = rowAsRange.Cells(counter) Then
-                result = True
+                If counter = colCount Then
+                    finalResult = True
+                End If
             Else
-                result = False
                 counter = colCount
             End If
         Next counter
     Next rowInTbl
-    doesRowExistInRange = result
+    doesRowExistInRange = finalResult
 End Function
 Function doesRowExistInRange_whereRowISsProvidedAsACSV(ByVal tbl As Range, ByVal rowAsCSV_indicateLastValueWithoutComma As String) As Boolean
     Dim rowInTbl As Range
-    Dim result As Boolean
-    result = False
+    Dim finalResult As Boolean
+    finalResult = False
     Dim lastRowNum As Integer
     Dim csvSplit() As String
     csv = Split(rowAsCSV_indicateLastValueWithoutComma, ",")
@@ -243,14 +244,18 @@ Function doesRowExistInRange_whereRowISsProvidedAsACSV(ByVal tbl As Range, ByVal
         Dim counter As Integer
         For counter = 1 To colCount
             If rowInTbl.Cells(counter) = csv(counter - 1) Then
-                result = True
+                If counter = colCount Then
+                    finalResult = True
+                End If
             Else
-                result = False
                 counter = colCount
             End If
         Next counter
+        If finalResult = True Then
+            Exit For
+        End If
     Next rowInTbl
-    doesRowExistInRange_whereRowISsProvidedAsACSV = result
+    doesRowExistInRange_whereRowISsProvidedAsACSV = finalResult
 End Function
 Function rowToCSV(ByVal rowRange As Range) As String
     Dim result As String
