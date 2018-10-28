@@ -129,7 +129,16 @@ Sub runAllTests()
         rngArr(1) = "J4:L7"
         Call moveRanges_KeepWithinTableRanges("Version", 2, rngArr, False)
         result = .Range("F8") & "," & .Range("G8") & "," & .Range("H8")
-        Call addOutput(rowNum, "moveRanges_KeepWithinTableRanges() [2 column, 0 rows]", result, "0,0,10")
+        Call addOutput(rowNum, "moveRanges_KeepWithinTableRanges() [2 columns, 0 rows]", result, "0,0,10")
+        rowNum = rowNum + 1
+        Dim rngArr2(1) As String
+        rngArr(0) = "F26:H26"
+        .Range("F26") = 1
+        .Range("G26") = vbNullString
+        .Range("H26") = vbNullString
+        Call moveRanges_KeepWithinTableRanges("Version", 1, rngArr, False)
+        result = .Range("F26") & "," & .Range("G26") & "," & .Range("H26")
+        Call addOutput(rowNum, "moveRanges_KeepWithinTableRanges() [1 entry,1 column, 0 rows]", result, ",1,")
         rowNum = rowNum + 1
         
         'findExtremeValues()
