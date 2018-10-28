@@ -32,7 +32,12 @@ Sub moveRanges_KeepWithinTableRanges(ByVal sheetname As String, ByVal columnShif
         Set lastNonEmptyCell = .Range(lastNonEmptyCellAddressInTableRange(sheetname, str_tblRange))
         Set subTable = .Range(firstCellAddress & ":" & lastNonEmptyCell.address)
         Dim lastColIndexSub As Integer
-        lastColIndexSub = getColNum(Split(Split(subTable.address, ":")(1), "$")(1))
+        Dim num As Integer
+        subTableAddr = subTable.address
+        If InStr(subTableAddr, ":") = 0 Then
+            subTableAddr = subTableAddr & ":" & subTableAddr
+        End If
+        lastColIndexSub = getColNum(Split(Split(subTableAddr, ":")(1), "$")(1))
     
         Dim allowedShift As Integer
         allowedShift = lastColIndex - lastNonEmptyCell.column
