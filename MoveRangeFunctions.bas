@@ -3,72 +3,80 @@ Attribute VB_Name = "MoveRangeFunctions"
 
 Sub moveRanges_KeepWithinTableRanges(ByVal sheetname As String, ByVal columnShift As Integer, ByRef tableRangesAsString() As String, Optional ByVal showConfirm = True)
   With Worksheets(sheetname)
-    For Each str_tblRange In tableRangesAsString
-        Dim table As Range
-        Set table = .Range(str_tblRange)
-        Dim tableAddressSplitByColon() As String
-        tableAddressSplitByColon = Split(table.address, ":")
-        Dim lastCellAddress As String
-        lastCellAddress = tableAddressSplitByColon(1)
-        Dim firstCellAddress As String
-        firstCellAddress = tableAddressSplitByColon(0)
-        Dim lastCellAddres_split() As String
-        lastCellAddres_split = Split(lastCellAddress, "$")
-        Dim firstCellAddress_split() As String
-        firstCellAddress_split = Split(firstCellAddress, "$")
-        
-        Dim lastColIndex As Integer
-        lastColIndex = getColNum(lastCellAddres_split(1))
-        Dim lastRowIndex As Integer
-        lastRowIndex = CInt(lastCellAddres_split(2))
-        Dim firstColIndex As Integer
-        firstColIndex = getColNum(firstCellAddress_split(1))
-        Dim firstRowIndex As Integer
-        firstRowIndex = CInt(firstCellAddress_split(2))
+    Dim warnUser As Boolean
+    Dim allowShiftData As Boolean
+    Dim subAddress As String
+    Dim subTable As range
+    warnUser = False
+    allowShiftData = False
+    Dim allowedShift As Integer
     
-        Dim subTable As Range
-        Dim lastNonEmptyCell As Range
-    
-        Set lastNonEmptyCell = .Range(lastNonEmptyCellAddressInTableRange(sheetname, str_tblRange))
-        Set subTable = .Range(firstCellAddress & ":" & lastNonEmptyCell.address)
-        Dim lastColIndexSub As Integer
-        Dim num As Integer
-        subTableAddr = subTable.address
-        If InStr(subTableAddr, ":") = 0 Then
-            subTableAddr = subTableAddr & ":" & subTableAddr
-        End If
-        lastColIndexSub = getColNum(Split(Split(subTableAddr, ":")(1), "$")(1))
-    
-        Dim allowedShift As Integer
-        allowedShift = lastColIndex - lastNonEmptyCell.column
-    
-        If columnShift > allowedShift Then
-            Dim colIndex As Integer
-            colIndex = lastColIndexSub - (columnShift - allowedShift)
-            Set subTable = .Range(Cells(firstRowIndex, firstColIndex), Cells(lastRowIndex, colIndex))
-            If showConfirm = False Then
-                    Call emptyColumnAfterThisColumn(colIndex, table)
-                    Call moveRange(sheetname, subTable, columnShift, 0)
-            Else
-                If MsgBox("Warning: You may lose data. Would you like to continue?", vbYesNo) = vbYes Then
-                    Call emptyColumnAfterThisColumn(colIndex, table)
-                    Call moveRange(sheetname, subTable, columnShift, 0)
-                    showConfirm = False
+    If showConfirm = True Then
+        For Each str_range In tableRangesAsString
+            If str_range <> vbNullString Then
+                If getNumberOfEmptyCellsAtTheEndOfRow(str_range, sheetname) > columnShift Then
+                    warnUser = True
+                    Exit For
                 End If
             End If
+        Next str_range
+    End If
+    
+    
+    If warnUser = False Then
+            Dim aRangeAsStr As Variant
+            For Each aRangeAsStr In tableRangesAsString
+                If aRangeAsStr <> vbNullString Then
+                    allowedShift = getNumberOfEmptyCellsAtTheEndOfRow(aRangeAsStr, sheetname)
+                    subAddress = getSubTableWithinRange(aRangeAsStr, sheetname)
+                    If subAddress <> vbNullString Then
+                        Set subTable = .range(subAddress)
+                        If allowedShift < columnShift Then
+                            Call emptyLastXcolumnsInRow(columnShift - allowedShift, subAddress, sheetname)
+                        End If
+                        subAddress = getSubTableWithinRange(aRangeAsStr, sheetname)
+                        Call moveRange(sheetname, subTable, columnShift, 0)
+                    End If
+                End If
+            Next aRangeAsStr
+    Else
+        If showConfirm = True Then
+                If MsgBox("Warning: You may lose data. Would you like to proceed?", vbExclamation + vbYesNo) = vbYes Then
+                    allowShiftData = True
+                End If
         Else
-            Call moveRange(sheetname, subTable, columnShift, 0)
+            allowShiftData = True
         End If
-    Next str_tblRange
+        If allowShiftData = True Then
+            Dim aRangeAsStr2 As Variant
+            For Each aRangeAsStr2 In tableRangesAsString
+                If aRangeAsStr2 <> vbNullString Then
+                    allowedShift = getNumberOfEmptyCellsAtTheEndOfRow(aRangeAsStr2, sheetname)
+                    subAddress = getSubTableWithinRange(aRangeAsStr2, sheetname)
+                    If subAddress <> vbNullString Then
+                        Set subTable = .range(subAddress)
+                        If allowedShift < columnShift Then
+                            Call emptyLastXcolumnsInRow(columnShift - allowedShift, subAddress, sheetname)
+                        End If
+                        subAddress = getSubTableWithinRange(aRangeAsStr2, sheetname)
+                        If subAddress <> vbNullString Then
+                            Set subTable = .range(subAddress)
+                            Call moveRange(sheetname, subTable, columnShift, 0)
+                        End If
+                    End If
+                End If
+            Next aRangeAsStr2
+        End If
+    End If
   End With
 End Sub
-Sub moveRange(ByVal sheetname As String, ByRef rng As Range, ByVal columnShift As Integer, ByVal rowShift As Integer)
+Sub moveRange(ByVal sheetname As String, ByRef rng As range, ByVal columnShift As Integer, ByVal rowShift As Integer)
     Worksheets(sheetname).Activate
     Dim noOfCells As Integer
     noOfCells = rng.Count
     Dim valuesInRng() As String
     ReDim valuesInRng(noOfCells)
-    Dim cell As Range
+    Dim cell As range
     Dim i As Integer
     i = 0
     For Each cell In rng.Cells
@@ -76,7 +84,7 @@ Sub moveRange(ByVal sheetname As String, ByRef rng As Range, ByVal columnShift A
         cell.Value = ""
         i = i + 1
     Next cell
-    Dim c As Range
+    Dim c As range
     Dim j As Integer
     j = 0
     For Each c In rng
@@ -84,8 +92,8 @@ Sub moveRange(ByVal sheetname As String, ByRef rng As Range, ByVal columnShift A
         Dim r2 As Integer
         c2 = c.column + columnShift
         r2 = c.row + rowShift
-        If Worksheets(sheetname).Range(Cells(r2, c2), Cells(r2, c2)).AllowEdit = True Then
-            Worksheets(sheetname).Range(Cells(r2, c2), Cells(r2, c2)).Value = valuesInRng(j)
+        If Worksheets(sheetname).range(Cells(r2, c2), Cells(r2, c2)).AllowEdit = True Then
+            Worksheets(sheetname).range(Cells(r2, c2), Cells(r2, c2)).Value = valuesInRng(j)
         End If
         j = j + 1
     Next c
