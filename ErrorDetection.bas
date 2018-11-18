@@ -27,6 +27,7 @@ Function invalidInput(ByVal selected As Range, ByVal options As Range, ByVal iss
                 If j = options.Count And s <> Empty Then
                         results = suggestions(s, options)
                         Dim issue2 As String
+                        issue2 = issue
                         If nameColumn <> "n/a" Then
                             issue2 = issue & " (" & .Range(nameColumn & selectedItem.row) & ")"
                         End If
@@ -273,7 +274,7 @@ Function findExtremeValues_where_dataEntryRangeIsDifferentToInputRange(ByVal she
     End With
     findExtremeValues_where_dataEntryRangeIsDifferentToInputRange = counter
 End Function
-Function quickValidateRequiredFieldsInCorrespondingTables(ByRef ranges() As Range, ByRef tblNames() As String, Optional ByVal nameColumn = "n/a")
+Function mandatoryChecksForCorrespondingCells(ByRef ranges() As Range, ByRef tblNames() As String, Optional ByVal nameColumn = "n/a")
     Dim i As Integer
     Dim j As Integer
     Dim k As Integer
@@ -308,7 +309,7 @@ Function quickValidateRequiredFieldsInCorrespondingTables(ByRef ranges() As Rang
         Next j
     Next i
 End Function
-Function quickValidateRequiredFieldsInCorrespondingTables_MsgBox(ByRef arr_ranges() As Range, ByRef tblNames() As String, ByVal sheetname As String, Optional ByVal colLetter_names As String = "n/a", Optional ByVal rowNum_headers As String = "n/a", Optional ByVal displayMsgBox = True)
+Function mandatoryChecksForCorrespondingCells_MsgBox(ByRef arr_ranges() As Range, ByRef tblNames() As String, ByVal sheetname As String, Optional ByVal colLetter_names As String = "n/a", Optional ByVal rowNum_headers As String = "n/a", Optional ByVal displayMsgBox = True)
     Dim i As Integer
     Dim j As Integer
     Dim table As Range
@@ -385,5 +386,5 @@ Function quickValidateRequiredFieldsInCorrespondingTables_MsgBox(ByRef arr_range
             messageCount = messageCount + 1
         End If
     Next i
-    quickValidateRequiredFieldsInCorrespondingTables_MsgBox = messageCount
+    mandatoryChecksForCorrespondingCells_MsgBox = messageCount
 End Function

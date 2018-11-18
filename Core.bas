@@ -1,44 +1,13 @@
 Attribute VB_Name = "Core"
 'Sonya - General Functions
-Function getSubTableWithinRange(ByVal rangeAsString As String, ByVal sheetname As String)
-    Dim firstCellAddress As String
-    Dim lastCellAddress As String
-    With Worksheets(sheetname)
-        Dim r As range
-        Set r = .range(rangeAsString)
-        Dim c As range
-        Dim isFirstSet As Boolean
-        isFirstSet = False
-        For Each c In r
-            If c <> vbNullString And isFirstSet = False Then
-                firstCellAddress = c.address
-                isFirstSet = True
-            Else
-                If c <> vbNullString And isFirstSet = True Then
-                    lastCellAddress = c.address
-                End If
-            End If
-        Next c
-    End With
-    Dim result As String
-    result = firstCellAddress & ":" & lastCellAddress
-    If result = ":" Then
-        result = ""
-    Else
-        If firstCellAddress <> vbNullString And lastCellAddress = vbNullString Then
-            result = firstCellAddress & ":" & firstCellAddress
-        End If
-    End If
-    getSubTableWithinRange = result
-End Function
 Function emptyLastXcolumnsInRow(ByVal numberOfColumnsToEmpty As Integer, ByVal rangeAsString As String, ByVal sheetname As String)
     With Worksheets(sheetname)
-        Dim r As range
-        Dim c As range
+        Dim r As Range
+        Dim c As Range
         Dim i As Integer
         Dim counter As Integer
         counter = 0
-        Set r = .range(rangeAsString)
+        Set r = .Range(rangeAsString)
         For i = r.Cells.Count To 1 Step -1
             If counter < numberOfColumnsToEmpty Then
                 r.Cells(i).Value = vbNullString
@@ -49,27 +18,27 @@ Function emptyLastXcolumnsInRow(ByVal numberOfColumnsToEmpty As Integer, ByVal r
         Next i
     End With
 End Function
-Function getWholeCol(ByVal first As Integer, ByVal sheetname As String, ByVal column As String) As range
+Function getWholeCol(ByVal first As Integer, ByVal sheetname As String, ByVal column As String) As Range
     Dim i As Integer
     i = first
     Dim max As Integer
     With Worksheets(sheetname)
         Do Until i < 0
-            If .range(column & i) = vbNullString Then
+            If .Range(column & i) = vbNullString Then
                 max = i - 1
                 i = -1
             Else
                 i = i + 1
             End If
         Loop
-        Set getWholeCol = .range(column & first & ":" & column & max)
+        Set getWholeCol = .Range(column & first & ":" & column & max)
     End With
 End Function
 Function getNumberOfEmptyCellsAtTheEndOfRow(ByVal rngAsString As String, ByVal sheetname As String) As Integer
     With Worksheets(sheetname)
         Dim cellCount As Integer
-        Dim rng As range
-        Set rng = .range(rngAsString)
+        Dim rng As Range
+        Set rng = .Range(rngAsString)
         cellCount = rng.Cells.Count
         Dim i As Integer
         Dim counter As Integer
@@ -165,7 +134,7 @@ Function isDataInCSV(ByVal csv_indicateLastValueWithoutCommaAtTheEnd As String, 
     isDataInCSV = result
 End Function
 Sub emptyThisRange(ByVal rngAsString As String, ByVal sheetname As String)
-    Worksheets(sheetname).range(rngAsString).ClearContents
+    Worksheets(sheetname).Range(rngAsString).ClearContents
 End Sub
 Function getColumnAsLetter(ByVal cellAddress As String) As String
     Dim addressSplit() As String
@@ -182,7 +151,7 @@ Function lastRowNumOfNonEmptyCellInCol(ByVal first As Integer, ByVal sheetname A
     Dim max As Integer
     With Worksheets(sheetname)
         Do Until i < 0
-            If .range(column & i) = vbNullString Then
+            If .Range(column & i) = vbNullString Then
                 max = i - 1
                 If max < first Then
                     max = first
@@ -195,15 +164,15 @@ Function lastRowNumOfNonEmptyCellInCol(ByVal first As Integer, ByVal sheetname A
     End With
     lastRowNumOfNonEmptyCellInCol = max
 End Function
-Function firstNonEmptyCell(ByVal sheetname As String, ByVal rangeAsString As String) As range
-    Dim cell As range
-    Dim r As range
-    Set r = Worksheets(sheetname).range(rangeAsString)
+Function firstNonEmptyCell(ByVal sheetname As String, ByVal rangeAsString As String) As Range
+    Dim cell As Range
+    Dim r As Range
+    Set r = Worksheets(sheetname).Range(rangeAsString)
     Dim i As Integer
     i = 1
-    Dim result As range
+    Dim result As Range
     For Each cell In r
-        If cell.Value <> vbNullString And result Is Nothing Then
+        If (cell.Value <> vbNullString Or cell.Value <> "") And result Is Nothing Then
             Set result = cell
             Exit For
         End If
@@ -211,15 +180,15 @@ Function firstNonEmptyCell(ByVal sheetname As String, ByVal rangeAsString As Str
     Set firstNonEmptyCell = result
 End Function
 Function getColNum(ByVal letter As String) As Integer
-    Dim r As range
-    Set r = range(letter & "1")
+    Dim r As Range
+    Set r = Range(letter & "1")
     getColNum = r.column
 End Function
 Function lastNonEmptyCellAddressInTableRange(ByVal sheetname As String, ByVal tableRangeAsString As String) As String
-    Dim table As range
-    Set table = Worksheets(sheetname).range(tableRangeAsString)
-    Dim cell As range
-    Dim result As range
+    Dim table As Range
+    Set table = Worksheets(sheetname).Range(tableRangeAsString)
+    Dim cell As Range
+    Dim result As Range
     For Each cell In table
         If cell.Value <> vbNullString Then
             Set result = cell
@@ -227,8 +196,8 @@ Function lastNonEmptyCellAddressInTableRange(ByVal sheetname As String, ByVal ta
     Next cell
     lastNonEmptyCellAddressInTableRange = result.address
 End Function
-Sub emptyColumnAfterThisColumn(ByVal columnNum As Integer, ByVal r As range)
-    Dim c As range
+Sub emptyColumnAfterThisColumn(ByVal columnNum As Integer, ByVal r As Range)
+    Dim c As Range
     For Each c In r
         If c.column > columnNum Then
             c.Value = vbNullString
@@ -243,18 +212,17 @@ Function intArraySize(ByRef arr() As Integer) As Integer
 End Function
 Function lastNonEmptyCellAddressInRow(ByVal rangeAsString As String, ByVal sheetname As String) As String
   With Worksheets(sheetname)
-    .Activate
-    Dim firstCell As range
-    Set firstCell = .range(rangeAsString)
+    Dim firstCell As Range
+    Set firstCell = .Range(rangeAsString)
     Dim firstColNum As Integer
     firstColNum = firstCell.column
     Dim lastCellAddress As String
     lastCellAddress = firstCell.address
     If InStr(firstCell.address, ":") Then
         lastCellAddress = Split(firstCell.address, ":")(0)
-        Dim r As range
-        Set r = .range(rangeAsString)
-        Dim cell As range
+        Dim r As Range
+        Set r = .Range(rangeAsString)
+        Dim cell As Range
         For Each cell In r
             If cell.Value <> vbNullString Then
                 lastCellAddress = cell.address
@@ -264,8 +232,8 @@ Function lastNonEmptyCellAddressInRow(ByVal rangeAsString As String, ByVal sheet
         Dim i As Integer
         i = 1
         Do Until i < 0
-            Dim c As range
-            Set c = .range(Cells(firstCell.row, firstColNum + i), Cells(firstCell.row, firstColNum + i))
+            Dim c As Range
+            Set c = .Range(Cells(firstCell.row, firstColNum + i), Cells(firstCell.row, firstColNum + i))
             If c.Value <> vbNullString Then
                 lastCellAddress = c.address
                 i = i + 1
@@ -277,8 +245,8 @@ Function lastNonEmptyCellAddressInRow(ByVal rangeAsString As String, ByVal sheet
     End With
     lastNonEmptyCellAddressInRow = lastCellAddress
 End Function
-Function doesRowExistInRange(ByVal tbl As range, ByVal rowAsRange As range) As Boolean
-    Dim rowInTbl As range
+Function doesRowExistInRange(ByVal tbl As Range, ByVal rowAsRange As Range) As Boolean
+    Dim rowInTbl As Range
     Dim finalResult As Boolean
     finalResult = False
     Dim lastRowNum As Integer
@@ -298,8 +266,8 @@ Function doesRowExistInRange(ByVal tbl As range, ByVal rowAsRange As range) As B
     Next rowInTbl
     doesRowExistInRange = finalResult
 End Function
-Function doesRowExistInRange_whereRowISsProvidedAsACSV(ByVal tbl As range, ByVal rowAsCSV_indicateLastValueWithoutComma As String) As Boolean
-    Dim rowInTbl As range
+Function doesRowExistInRange_whereRowISsProvidedAsACSV(ByVal tbl As Range, ByVal rowAsCSV_indicateLastValueWithoutComma As String) As Boolean
+    Dim rowInTbl As Range
     Dim finalResult As Boolean
     finalResult = False
     Dim lastRowNum As Integer
@@ -324,10 +292,10 @@ Function doesRowExistInRange_whereRowISsProvidedAsACSV(ByVal tbl As range, ByVal
     Next rowInTbl
     doesRowExistInRange_whereRowISsProvidedAsACSV = finalResult
 End Function
-Function rowToCSV(ByVal rowRange As range) As String
+Function rowToCSV(ByVal rowRange As Range) As String
     Dim result As String
     result = vbNullString
-    Dim c As range
+    Dim c As Range
     For Each c In rowRange.Cells
         If result <> vbNullString Then
             result = result & "," & c.Value

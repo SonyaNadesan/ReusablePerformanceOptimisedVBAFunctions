@@ -7,7 +7,7 @@ Sub runAllTests()
     rowNum = 5
     Dim result As String
     
-    With Worksheets("Version")
+    With Worksheets("Unit Tests")
         
         'is_anagram
         result = is_Anagram("NADII", "INDIA", True)
@@ -31,7 +31,7 @@ Sub runAllTests()
         
         'invalidInput()
         Call ClearIssues
-        result = invalidInput(.Range("F13:F21"), .Range("I15:I21"), "", "Version")
+        result = invalidInput(.Range("F13:F21"), .Range("I15:I21"), "", "Unit Tests")
         result = Worksheets("Validation").Range("B1")
         Call addOutput(rowNum, "invalidInput()", result, "6")
         Call ClearIssues
@@ -119,7 +119,7 @@ Sub runAllTests()
         Call constructTestTables
         Dim rng As Range
         Set rng = .Range("F4:H7")
-        Call moveRange("Version", rng, 1, 0)
+        Call moveRange("Unit Tests", rng, 1, 0)
         result = .Range("F8") & "," & .Range("G8") & "," & .Range("H8")
         Call addOutput(rowNum, "moveRange() [1 column, 0 rows]", result, "0,10,26")
         rowNum = rowNum + 1
@@ -127,7 +127,7 @@ Sub runAllTests()
         Dim rngArr(1) As String
         rngArr(0) = "F4:H7"
         rngArr(1) = "J4:L7"
-        Call moveRanges_KeepWithinTableRanges("Version", 2, rngArr, False)
+        Call moveRanges_KeepWithinTableRanges("Unit Tests", 2, rngArr, False)
         result = .Range("F8") & "," & .Range("G8") & "," & .Range("H8")
         Call addOutput(rowNum, "moveRanges_KeepWithinTableRanges() [2 columns, 0 rows]", result, "0,0,10")
         rowNum = rowNum + 1
@@ -136,14 +136,14 @@ Sub runAllTests()
         .Range("F26") = 1
         .Range("G26") = vbNullString
         .Range("H26") = vbNullString
-        Call moveRanges_KeepWithinTableRanges("Version", 1, rngArr, False)
+        Call moveRanges_KeepWithinTableRanges("Unit Tests", 1, rngArr, False)
         result = .Range("F26") & "," & .Range("G26") & "," & .Range("H26")
         Call addOutput(rowNum, "moveRanges_KeepWithinTableRanges() [1 entry,1 column, 0 rows]", result, ",1,")
         rowNum = rowNum + 1
         
         'findExtremeValues()
         Call constructTestTables
-        result = findExtremeValues("Version", "F4:H7", 4, 7)
+        result = findExtremeValues("Unit Tests", "F4:H7", 4, 7)
         Call addOutput(rowNum, "findExtremeValues() [1 to 8][min: 4, max: 7]", result, "4")
         Call ClearIssues
         rowNum = rowNum + 1
@@ -179,7 +179,7 @@ Sub runAllTests()
         rowNum = rowNum + 1
         
         'getWholeCol
-        result = getWholeCol(4, "Version", "F").address
+        result = getWholeCol(4, "Unit Tests", "F").address
         Call addOutput(rowNum, "getWholeCol() [F4]", result, "$F$4:$F$8")
         rowNum = rowNum + 1
         
@@ -212,14 +212,14 @@ Sub runAllTests()
         
         'emptyThisRange()
         Call constructTestTables
-        Call emptyThisRange("F5:H7", "Version")
+        Call emptyThisRange("F5:H7", "Unit Tests")
         result = .Range("F8") & "," & .Range("G8") & "," & .Range("H8")
         Call addOutput(rowNum, "emptyThisRange() [F5:H7]", result, "1,5,0")
         rowNum = rowNum + 1
         
         'lastRowNumOfNonEmptyCellInCol()
         Call constructTestTables
-        result = lastRowNumOfNonEmptyCellInCol(4, "Version", "F")
+        result = lastRowNumOfNonEmptyCellInCol(4, "Unit Tests", "F")
         Call addOutput(rowNum, "emptyThisRange() [F4]", result, "8")
         rowNum = rowNum + 1
         
@@ -232,20 +232,20 @@ Sub runAllTests()
         
         'firstNonEmptyCell()
         Call constructTestTables
-        result = firstNonEmptyCell("Version", "G1:G7").address
+        result = firstNonEmptyCell("Unit Tests", "G1:G7").address
         Call addOutput(rowNum, "firstNonEmptyCell() [G1:G7]", result, "$G$4")
         rowNum = rowNum + 1
         
         'lastNonEmptyCellInTableRange()
         Call constructTestTables
-        result = lastNonEmptyCellAddressInTableRange("Version", "F4:H7")
+        result = lastNonEmptyCellAddressInTableRange("Unit Tests", "F4:H7")
         Call addOutput(rowNum, "lastNonEmptyCellInTableRange() [F4:H7]", result, "$G$7")
         rowNum = rowNum + 1
         
         
         'lastNonEmptyCellAddressInRow()
         Call constructTestTables
-        result = lastNonEmptyCellAddressInRow("F4:H4", "Version")
+        result = lastNonEmptyCellAddressInRow("F4:H4", "Unit Tests")
         Call addOutput(rowNum, "lastNonEmptyCellAddressInRow() [F4:H4]", result, "$G$4")
         rowNum = rowNum + 1
         
@@ -267,16 +267,16 @@ Sub runAllTests()
         Call addOutput(rowNum, "doesRowExistInRange() [F4:H4, F5:H5]", result, "True")
         
         'getEarliestDate
-        result = getEarliestDate("Version", "N10:N14")
+        result = getEarliestDate("Unit Tests", "N10:N14")
         Call addOutput(rowNum, "getEarliestDate() [N10:N14]", result, "09/06/1966")
         rowNum = rowNum + 1
         
         'getLatestDate
-        result = getLatestDate("Version", "N10:N14")
+        result = getLatestDate("Unit Tests", "N10:N14")
         Call addOutput(rowNum, "getLatestDate() [N10:N14]", result, "27/07/2017")
         rowNum = rowNum + 1
         
-        'quickValidateRequiredFieldsInCorrespondingTables
+        'mandatoryChecksForCorrespondingCells
         Call ClearIssues
         Call constructTestTables
         .Range("F4") = ""
@@ -288,36 +288,36 @@ Sub runAllTests()
         tblNames(0) = "yellow"
         tblNames(1) = "green"
         
-        Call quickValidateRequiredFieldsInCorrespondingTables(rangesArr, tblNames)
-        Call addOutput(rowNum, "quickValidateRequiredFieldsInCorrespondingTables() [2 missing values]", "2", Worksheets("Validation").Range("B1"))
+        Call mandatoryChecksForCorrespondingCells(rangesArr, tblNames)
+        Call addOutput(rowNum, "mandatoryChecksForCorrespondingCells() [2 missing values]", "2", Worksheets("Validation").Range("B1"))
         rowNum = rowNum + 1
         Call ClearIssues
         
         .Range("F6") = ""
         Dim numberOfErrors As Integer
-        numberOfErrors = quickValidateRequiredFieldsInCorrespondingTables_MsgBox(rangesArr, tblNames, "Version", displayMsgBox:=False)
-        Call addOutput(rowNum, "quickValidateRequiredFieldsInCorrespondingTables_MsgBox() [2 tables with missing value(s)]", "2", numberOfErrors)
+        numberOfErrors = mandatoryChecksForCorrespondingCells_MsgBox(rangesArr, tblNames, "Unit Tests", displayMsgBox:=False)
+        Call addOutput(rowNum, "mandatoryChecksForCorrespondingCells_MsgBox() [2 tables with missing value(s)]", "2", numberOfErrors)
         rowNum = rowNum + 1
         Call ClearIssues
         
         Call constructTestTables
         .Range("J6") = 30
-        Call findExtremeValues_where_dataEntryRangeIsDifferentToInputRange("Version", "J4:K7", 0, 9, "Version", "F4:G7")
+        Call findExtremeValues_where_dataEntryRangeIsDifferentToInputRange("Unit Tests", "J4:K7", 0, 9, "Unit Tests", "F4:G7")
         result = Worksheets("Validation").Range("C3")
         Call addOutput(rowNum, "findExtremeValues_where_dataEntryRangeIsDifferentToInputRange [expect: F6]", result, "$F$6")
         rowNum = rowNum + 1
         Call ClearIssues
         
-        .Range("A1" & ":C" & rowNum).columns.AutoFit
+        .Range("A1" & ":C" & rowNum).columns.Autofit
     End With
 End Sub
 Sub clearOutput()
     Dim lastEntryRowNum As Integer
-    lastEntryRowNum = lastRowNumOfNonEmptyCellInCol(5, "Version", "A")
-    Worksheets("Version").Range("A5" & ":C" & lastEntryRowNum).ClearContents
+    lastEntryRowNum = lastRowNumOfNonEmptyCellInCol(5, "Unit Tests", "A")
+    Worksheets("Unit Tests").Range("A5" & ":C" & lastEntryRowNum).ClearContents
 End Sub
 Sub addOutput(ByVal rowNum As Integer, ByVal test As String, ByVal actual As String, ByVal expectedOutput As String, Optional ByVal exactMatch = True)
-    With Worksheets("Version")
+    With Worksheets("Unit Tests")
         .Range("A" & rowNum) = test
         If exactMatch = True Then
             If UCase(actual) = UCase(expectedOutput) Then
@@ -337,7 +337,7 @@ Sub addOutput(ByVal rowNum As Integer, ByVal test As String, ByVal actual As Str
     End With
 End Sub
 Sub constructTestTables()
-  With Worksheets("Version")
+  With Worksheets("Unit Tests")
     .Range("F4:L7").ClearContents
     .Range("F4") = 1
     .Range("F5") = 2
