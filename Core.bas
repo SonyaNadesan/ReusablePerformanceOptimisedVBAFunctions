@@ -18,6 +18,25 @@ Function emptyLastXcolumnsInRow(ByVal numberOfColumnsToEmpty As Integer, ByVal r
         Next i
     End With
 End Function
+Function emptyFirstXcolumnsInRow(ByVal numberOfColumnsToEmpty As Integer, ByVal rangeAsString As String, ByVal sheetname As String)
+    With Worksheets(sheetname)
+        Dim r As Range
+        Dim c As Range
+        Dim i As Integer
+        Dim counter As Integer
+        counter = 0
+        Set r = .Range(rangeAsString)
+        For i = 1 To r.Cells.Count
+            If counter < numberOfColumnsToEmpty Then
+                r.Cells(i).Value = vbNullString
+                counter = counter + 1
+            Else
+                Exit For
+            End If
+        Next i
+    End With
+End Function
+
 Function getWholeCol(ByVal first As Integer, ByVal sheetname As String, ByVal column As String) As Range
     Dim i As Integer
     i = first
@@ -52,6 +71,25 @@ Function getNumberOfEmptyCellsAtTheEndOfRow(ByVal rngAsString As String, ByVal s
         Next i
     End With
     getNumberOfEmptyCellsAtTheEndOfRow = counter
+End Function
+Function getNumberOfEmptyCellsAtTheStartOfRow(ByVal rngAsString As String, ByVal sheetname As String) As Integer
+    With Worksheets(sheetname)
+        Dim cellCount As Integer
+        Dim rng As Range
+        Set rng = .Range(rngAsString)
+        cellCount = rng.Cells.Count
+        Dim i As Integer
+        Dim counter As Integer
+        counter = 0
+        For i = 1 To cellCount
+            If rng.Cells(i) = vbNullString Then
+                counter = counter + 1
+            Else
+                i = cellCount
+            End If
+        Next i
+    End With
+    getNumberOfEmptyCellsAtTheStartOfRow = counter
 End Function
 Function mergeCsvWithoutRepetition(ByVal csv1 As String, ByVal csv2) As String
     Dim result As String

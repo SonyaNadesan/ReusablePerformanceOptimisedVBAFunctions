@@ -10,29 +10,38 @@ Sub moveRanges_KeepWithinTableRanges(ByVal sheetname As String, ByVal columnShif
     warnUser = False
     allowShiftData = False
     Dim allowedShift As Integer
+    Dim abs_columnShift As Integer
     
     If showConfirm = True Then
-        For Each str_range In tableRangesAsString
-            If str_range <> vbNullString Then
-                If getNumberOfEmptyCellsAtTheEndOfRow(str_range, sheetname) < columnShift Then
-                    warnUser = True
-                    Exit For
-                End If
-            End If
-        Next str_range
+        warnUser = willDataBeLost(tableRangesAsString, sheetname, columnShift)
     End If
     
+    If columnShift < 0 Then
+        abs_columnShift = columnShift * -1
+    Else
+        abs_columnShift = columnShift
+    End If
     
     If warnUser = False Then
             Dim aRangeAsStr As Variant
             For Each aRangeAsStr In tableRangesAsString
                 If aRangeAsStr <> vbNullString Then
-                    allowedShift = getNumberOfEmptyCellsAtTheEndOfRow(aRangeAsStr, sheetname)
+                    If columnShift < 0 Then
+                        allowedShift = getNumberOfEmptyCellsAtTheStartOfRow(aRangeAsStr, sheetname)
+                    Else
+                        If columnShift > 0 Then
+                            allowedShift = getNumberOfEmptyCellsAtTheEndOfRow(aRangeAsStr, sheetname)
+                        End If
+                    End If
                     subAddress = getSubTableWithinRange(aRangeAsStr, sheetname)
                     If subAddress <> vbNullString Then
                         Set subTable = .Range(subAddress)
-                        If allowedShift < columnShift Then
-                            Call emptyLastXcolumnsInRow(columnShift - allowedShift, subAddress, sheetname)
+                        If allowedShift < abs_columnShift And columnShift > 0 Then
+                            Call emptyLastXcolumnsInRow(abs_columnShift - allowedShift, subAddress, sheetname)
+                        Else
+                            If allowedShift < abs_columnShift And columnShift < 0 Then
+                                Call emptyFirstXcolumnsInRow(abs_columnShift - allowedShift, subAddress, sheetname)
+                            End If
                         End If
                         subAddress = getSubTableWithinRange(aRangeAsStr, sheetname)
                         Call moveRange(sheetname, subTable, columnShift, 0)
@@ -43,6 +52,8 @@ Sub moveRanges_KeepWithinTableRanges(ByVal sheetname As String, ByVal columnShif
         If showConfirm = True Then
                 If MsgBox("Warning: You may lose data. Would you like to proceed?", vbExclamation + vbYesNo) = vbYes Then
                     allowShiftData = True
+                Else
+                    allowShiftData = False
                 End If
         Else
             allowShiftData = True
@@ -51,12 +62,22 @@ Sub moveRanges_KeepWithinTableRanges(ByVal sheetname As String, ByVal columnShif
             Dim aRangeAsStr2 As Variant
             For Each aRangeAsStr2 In tableRangesAsString
                 If aRangeAsStr2 <> vbNullString Then
-                    allowedShift = getNumberOfEmptyCellsAtTheEndOfRow(aRangeAsStr2, sheetname)
+                    If columnShift < 0 Then
+                        allowedShift = getNumberOfEmptyCellsAtTheStartOfRow(aRangeAsStr2, sheetname)
+                    Else
+                        If columnShift > 0 Then
+                            allowedShift = getNumberOfEmptyCellsAtTheEndOfRow(aRangeAsStr2, sheetname)
+                        End If
+                    End If
                     subAddress = getSubTableWithinRange(aRangeAsStr2, sheetname)
                     If subAddress <> vbNullString Then
                         Set subTable = .Range(subAddress)
-                        If allowedShift < columnShift Then
-                            Call emptyLastXcolumnsInRow(columnShift - allowedShift, subAddress, sheetname)
+                        If allowedShift < abs_columnShift And columnShift > 0 Then
+                            Call emptyLastXcolumnsInRow(abs_columnShift - allowedShift, subAddress, sheetname)
+                        Else
+                            If allowedShift < abs_columnShift And columnShift < 0 Then
+                                Call emptyFirstXcolumnsInRow(abs_columnShift - allowedShift, subAddress, sheetname)
+                            End If
                         End If
                         subAddress = getSubTableWithinRange(aRangeAsStr2, sheetname)
                         If subAddress <> vbNullString Then
@@ -92,8 +113,10 @@ Sub moveRange(ByVal sheetname As String, ByRef rng As Range, ByVal columnShift A
         Dim r2 As Integer
         c2 = c.column + columnShift
         r2 = c.row + rowShift
-        If Worksheets(sheetname).Range(Cells(r2, c2), Cells(r2, c2)).AllowEdit = True Then
-            Worksheets(sheetname).Range(Cells(r2, c2), Cells(r2, c2)).Value = valuesInRng(j)
+        If c2 > 0 And r2 > 0 Then
+            If Worksheets(sheetname).Range(Cells(r2, c2), Cells(r2, c2)).AllowEdit = True Then
+                Worksheets(sheetname).Range(Cells(r2, c2), Cells(r2, c2)).Value = valuesInRng(j)
+            End If
         End If
         j = j + 1
     Next c
@@ -109,11 +132,11 @@ Function getSubTableWithinRange(ByVal rangeAsString As String, ByVal sheetname A
         Dim isFirstSet As Boolean
         isFirstSet = False
         For Each c In r
-            If c <> vbNullString And isFirstSet = False Then
+            If c.Value <> vbNullString And isFirstSet = False Then
                 firstCellAddress = c.address
                 isFirstSet = True
             Else
-                If c <> vbNullString And isFirstSet = True Then
+                If c.Value <> vbNullString And isFirstSet = True Then
                     lastCellAddress = c.address
                 End If
             End If
@@ -129,4 +152,33 @@ Function getSubTableWithinRange(ByVal rangeAsString As String, ByVal sheetname A
         End If
     End If
     getSubTableWithinRange = result
+End Function
+Function willDataBeLost(ByRef tableRangesAsString() As String, ByVal sheetname As String, ByVal columnShift As Integer)
+    Dim result As Boolean
+    result = False
+    Dim str_range As Variant
+    If columnShift > 0 Then
+        For Each str_range In tableRangesAsString
+            If str_range <> vbNullString Then
+                If getNumberOfEmptyCellsAtTheEndOfRow(str_range, sheetname) < columnShift Then
+                    result = True
+                    Exit For
+                End If
+            End If
+        Next str_range
+    Else
+        If columnShift < 0 Then
+            Dim abs_columnShift As Integer
+            abs_columnShift = columnShift * -1
+            For Each str_range In tableRangesAsString
+                If str_range <> vbNullString Then
+                    If getNumberOfEmptyCellsAtTheStartOfRow(str_range, sheetname) < abs_columnShift Then
+                        result = True
+                        Exit For
+                    End If
+                End If
+            Next str_range
+        End If
+    End If
+    willDataBeLost = result
 End Function
