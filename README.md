@@ -6,7 +6,7 @@ Pfizer, GSK, Cococola, Asahi, AkzoNobel, Victrex, NEG and many more. One of the 
 two-way integration with Microsoft Excel, which has been proven to be very popular among finance professionals. These Excel documents are
 programmed by software developers at GenSight and are known as Dynamic Documents.
 
-One of my major projects at GenSight was building upon the "Project Financial Tool" - a dynamic document for Johnson & Johnson. Domr of 
+One of my major projects at GenSight was building upon the "Project Financial Tool" - a dynamic document for Johnson & Johnson. Some of 
 the tasks involved include:
 •  Extreme Value & Invalid Entry Detection
 •  Entry-Based Suggestion Feature (inc. typos and abbrev)
