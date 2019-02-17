@@ -1,37 +1,37 @@
 Attribute VB_Name = "ErrorDetection"
 'Sonya - Error Detection & Suggestion Feature
 
-Function invalidInput(ByVal selected As Range, ByVal options As Range, ByVal issue As String, ByVal sheetname As String, Optional ByVal nameColumn = "n/a")
-    Dim s As String
-    Dim o As String
+Function getTyposAndSuggestions(ByVal userInputs As Range, ByVal options As Range, ByVal issue As String, ByVal sheetname As String, Optional ByVal nameColumn = "n/a")
+    Dim anInput As String
+    Dim anOption As String
     Dim i As Integer
     Dim j As Integer
     Dim iLimit As Integer
     Dim jLimit As Integer
     Dim results As String
     
-    iLimit = selected.Count
+    iLimit = userInputs.Count
     jLimit = options.Count
-    With Worksheets(selected.Worksheet.name)
+    With Worksheets(userInputs.Worksheet.name)
     For i = 1 To iLimit
         Dim selectedItem As Range
-        Set selectedItem = selected(i)
-        s = selectedItem.Value
+        Set selectedItem = userInputs(i)
+        anInput = selectedItem.Value
         For j = 1 To jLimit
-            o = options(j).Value
+            anOption = options(j).Value
             'if a mtach is found, the input is valid, move onto the next input
-            If s = o Then
+            If anInput = anOption Then
                 j = jLimit + 1
             Else
                 'if input has been compared to all options, add it to the validation sheet
-                If j = options.Count And s <> Empty Then
-                        results = suggestions(s, options)
+                If j = options.Count And anInput <> Empty Then
+                        results = getSuggestedValues(anInput, options)
                         Dim issue2 As String
                         issue2 = issue
                         If nameColumn <> "n/a" Then
-                            issue2 = issue & " (" & .Range(nameColumn & selectedItem.row) & ")"
+                            issue2 = issue2 & " (" & .Range(nameColumn & selectedItem.row) & ")"
                         End If
-                        Call updateValidationSheet(issue2, sheetname, selectedItem.address, s, results)
+                        Call updateValidationSheet(issue2, sheetname, selectedItem.address, anInput, results)
                         results = vbNullString
                 End If
             End If
@@ -39,43 +39,44 @@ Function invalidInput(ByVal selected As Range, ByVal options As Range, ByVal iss
     Next i
     End With
 End Function
-Function invalidInput_multiSelect(ByVal selected As Range, ByVal options As Range, ByVal issue As String, ByVal sheetname As String, Optional ByVal nameColumn = "n/a", Optional ByVal delimeter = ";")
-    Dim s As String
-    Dim o As String
+Function getTyposAndSuggestions_multiSelect(ByVal userInputs As Range, ByVal options As Range, ByVal issue As String, ByVal sheetname As String, Optional ByVal nameColumn = "n/a", Optional ByVal delimeter = ";")
+    Dim anInput As String
+    Dim anOption As String
     Dim i As Integer
     Dim j As Integer
     Dim iLimit As Integer
     Dim jLimit As Integer
     Dim results As String
     
-    iLimit = selected.Count
+    iLimit = userInputs.Count
     jLimit = options.Count
-    With Worksheets(selected.Worksheet.name)
+    With Worksheets(userInputs.Worksheet.name)
     For i = 1 To iLimit
         Dim selectedItem As Range
-        Set selectedItem = selected(i)
-        s = selectedItem.Value
-        Dim sArray() As String
-        sArray = Split(s, delimeter)
+        Set selectedItem = userInputs(i)
+        anInput = selectedItem.Value
+        Dim inputArray() As String
+        inputArray = Split(anInput, delimeter)
         Dim str As Variant
         Dim position As Integer
         position = 0
-        For Each str In sArray
+        For Each str In inputArray
             position = position + 1
             For j = 1 To jLimit
-            o = options(j).Value
+           anOption = options(j).Value
             'if a mtach is found, the input is valid, move onto the next input
-            If str = o Then
+            If str = anOption Then
                 j = jLimit + 1
             Else
                 'if input has been compared to all options, add it to the validation sheet
-                If j = options.Count And s <> Empty Then
-                        results = suggestions(str, options)
+                If j = options.Count And anInput <> Empty Then
+                        results = getSuggestedValues(str, options)
                         Dim issue2 As String
+                        issue2 = issue
                         If nameColumn <> "n/a" Then
-                            issue2 = issue & " - Entry at position " & position & " (" & .Range(nameColumn & selectedItem.row) & ")"
+                            issue2 = issue2 & " - Entry at position " & position & " (" & .Range(nameColumn & selectedItem.row) & ")"
                         End If
-                        Call updateValidationSheet(issue2, sheetname, selectedItem.address, s, results)
+                        Call updateValidationSheet(issue2, sheetname, selectedItem.address, anInput, results)
                         results = vbNullString
                 End If
             End If
@@ -84,7 +85,7 @@ Function invalidInput_multiSelect(ByVal selected As Range, ByVal options As Rang
     Next i
     End With
 End Function
-Function suggestions(ByVal key As String, ByVal rangeOfData As Range) As String
+Function getSuggestedValues(ByVal key As String, ByVal rangeOfData As Range) As String
     Dim isAdvancedSearchOn As Boolean
     isAdvancedSearchOn = True
     Dim result As String
@@ -97,14 +98,14 @@ Function suggestions(ByVal key As String, ByVal rangeOfData As Range) As String
     keyLen = Len(key)
     'get abbreviated key
     Dim abbr As String
-    abbr = abbreviation(key)
+    abbr = abbreviate(key)
     Dim abbrLen As Integer
     abbrLen = Len(abbr)
     For Each cell In rangeOfData
         'prevent case-sesitivity
         word = UCase(cell.Value)
         Dim abbr_cell As String
-        abbr_cell = abbreviation(word)
+        abbr_cell = abbreviate(word)
         If abbr = word Or abbr_cell = key Then
             result = result & word & ", "
         Else
@@ -137,9 +138,9 @@ Function suggestions(ByVal key As String, ByVal rangeOfData As Range) As String
             End If
         End If
     Next cell
-    suggestions = result
+    getSuggestedValues = result
 End Function
-Function abbreviation(ByVal key As String) As String
+Function abbreviate(ByVal key As String) As String
     Dim abbr As String
     abbr = vbNullString
     If InStr(key, " ") = False Then
@@ -157,7 +158,7 @@ Function abbreviation(ByVal key As String) As String
             abbr = abbr & Mid(keySplit(i), 1, 1)
         Next i
     End If
-    abbreviation = abbr
+    abbreviate = abbr
 End Function
 Function is_Anagram(ByVal key As String, ByVal word As String, Optional ByVal exactMatch As Boolean = True) As Boolean
     Dim i As Integer
@@ -236,12 +237,12 @@ Function findExtremeValues(ByVal sheetname As String, ByVal rangeAsString As Str
     End With
     findExtremeValues = counter
 End Function
-Function findExtremeValues_where_dataEntryRangeIsDifferentToInputRange(ByVal sheetname As String, ByVal rangeAsString As String, ByVal minimumVal As Integer, ByVal maxVal As Integer, ByVal dataEntry_sheetname As String, ByVal dataEntry_range As String, Optional ByVal min_messageBeforeValue = "Extreme Value - Minimum value is ", Optional ByVal min_messageAfterValue = vbNullString, Optional ByVal max_messageBeforeValue = "Extreme Value - Maximum value is ", Optional ByVal max_messageAfterValue = vbNullString, Optional ByVal nameColumn = "n/a") As Integer
+Function findExtremeValues_EntryDifferentToLookUp(ByVal lookupSheetname As String, ByVal lookupRange As String, ByVal minimumVal As Integer, ByVal maxVal As Integer, ByVal dataEntry_sheetname As String, ByVal dataEntry_range As String, Optional ByVal min_messageBeforeValue = "Extreme Value - Minimum value is ", Optional ByVal min_messageAfterValue = vbNullString, Optional ByVal max_messageBeforeValue = "Extreme Value - Maximum value is ", Optional ByVal max_messageAfterValue = vbNullString, Optional ByVal nameColumn = "n/a") As Integer
     Dim r As Range
     Dim dataEntryRange As Range
     Dim cell As Range
-    With Worksheets(sheetname)
-        Set r = .Range(rangeAsString)
+    With Worksheets(lookupSheetname)
+        Set r = .Range(lookupRange)
         Set dataEntryRange = Worksheets(dataEntry_sheetname).Range(dataEntry_range)
         Dim counter As Integer
         Dim entryCell As Range
@@ -256,7 +257,7 @@ Function findExtremeValues_where_dataEntryRangeIsDifferentToInputRange(ByVal she
                     If nameColumn <> "n/a" Then
                         name = " (" & .Range(nameColumn & cell.row) & ")"
                     End If
-                    Call updateValidationSheet(min_messageBeforeValue & minimumVal & min_messageAfterValue & " " & name, sheetname, entryCell.address, entryCell.Value, "")
+                    Call updateValidationSheet(min_messageBeforeValue & minimumVal & min_messageAfterValue & " " & name, lookupSheetname, entryCell.address, entryCell.Value, "")
                     counter = counter + 1
                 Else
                     If cell.Value > maxVal Then
@@ -264,7 +265,7 @@ Function findExtremeValues_where_dataEntryRangeIsDifferentToInputRange(ByVal she
                         If nameColumn <> "n/a" Then
                             name = " (" & .Range(nameColumn & cell.row) & ")"
                         End If
-                        Call updateValidationSheet(max_messageBeforeValue & maxVal & max_messageAfterValue & " " & name, sheetname, entryCell.address, entryCell.Value, "")
+                        Call updateValidationSheet(max_messageBeforeValue & maxVal & max_messageAfterValue & " " & name, lookupSheetname, entryCell.address, entryCell.Value, "")
                         counter = counter + 1
                     End If
                 End If
@@ -272,7 +273,7 @@ Function findExtremeValues_where_dataEntryRangeIsDifferentToInputRange(ByVal she
             cellCounter = cellCounter + 1
         Next cell
     End With
-    findExtremeValues_where_dataEntryRangeIsDifferentToInputRange = counter
+    findExtremeValues_EntryDifferentToLookUp = counter
 End Function
 Function mandatoryChecksForCorrespondingCells(ByRef ranges() As Range, ByRef tblNames() As String, Optional ByVal nameColumn = "n/a")
     Dim i As Integer

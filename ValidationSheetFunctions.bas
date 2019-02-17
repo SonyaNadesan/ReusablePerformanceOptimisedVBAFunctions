@@ -8,16 +8,16 @@ Function updateValidationSheet(ByVal issue As String, ByVal sheetname As String,
         Dim newRowAsCSV As String
         newRowAsCSV = issue & "," & sheetname & "," & address & "," & currentVal & "," & suggestedvalues
         If checkForDuplicatesBeforeUpdate = False Then
-            Call addIssue(row, issue, sheetname, address, currentVal, suggestedvalues)
+            Call addIssueToValidationSheet(row, issue, sheetname, address, currentVal, suggestedvalues)
         Else
             If doesRowExistInRange_whereRowISsProvidedAsACSV(.Range("A2:E" & (row - 1)), newRowAsCSV) = False Then
-                Call addIssue(row, issue, sheetname, address, currentVal, suggestedvalues)
+                Call addIssueToValidationSheet(row, issue, sheetname, address, currentVal, suggestedvalues)
             End If
         End If
-        'createNavigateButtons (Worksheets("Validation").Range("B1").Value)
+        'createNavigateButtonsInValidationSheet (Worksheets("Validation").Range("B1").Value)
     End With
 End Function
-Sub addIssue(ByVal row As Integer, ByVal issue As String, ByVal sheetname As String, ByVal address As String, ByVal currentVal As String, ByVal suggestedvalues As String)
+Sub addIssueToValidationSheet(ByVal row As Integer, ByVal issue As String, ByVal sheetname As String, ByVal address As String, ByVal currentVal As String, ByVal suggestedvalues As String)
     With Worksheets("Validation")
         .Range("B1").Value = (row - 2)
         .Range("A" & row) = issue
@@ -31,7 +31,7 @@ Sub addIssue(ByVal row As Integer, ByVal issue As String, ByVal sheetname As Str
         End If
     End With
 End Sub
-Sub ClearIssues()
+Sub ClearIssuesInValidationSheet()
     With Worksheets("Validation")
         .Cells.ClearContents
         .Range("B1") = 0
@@ -44,7 +44,7 @@ Sub ClearIssues()
         .Range("A2:D2").Interior.ColorIndex = 48
     End With
 End Sub
-Sub createNavigateButtons(ByVal noOfIssues As Integer)
+Sub createNavigateButtonsInValidationSheet(ByVal noOfIssues As Integer)
         Application.ScreenUpdating = False
         Worksheets("Validation").Buttons.Delete
         Dim btn As Button
@@ -64,7 +64,7 @@ Sub createNavigateButtons(ByVal noOfIssues As Integer)
             End If
         Next i
 End Sub
-Sub NavigateToCell()
+Private Sub NavigateToCell()
     Dim cellRange As String
     cellRange = Application.Caller
     Dim data() As String

@@ -1,34 +1,43 @@
 Attribute VB_Name = "MoveRangeFunctions"
 'Sonya - Move Ranges
 
-Sub moveRanges_KeepWithinTableRanges(ByVal sheetname As String, ByVal columnShift As Integer, ByRef tableRangesAsString() As String, Optional ByVal showConfirm = True)
+Sub shiftData_keepDataWithinRanges(ByVal sheetname As String, ByVal columnShift As Integer, ByRef tableRangesAsString() As String, Optional ByVal showConfirm = True)
   With Worksheets(sheetname)
     Dim warnUser As Boolean
     Dim allowShiftData As Boolean
     Dim subAddress As String
     Dim subTable As Range
+    
+    'set default values
     warnUser = False
     allowShiftData = False
     Dim allowedShift As Integer
     Dim abs_columnShift As Integer
     
+    'check if confirmation is to be shown
     If showConfirm = True Then
+        'check if data will be lost; assign the result to variable which will be used to determine whether we will display warning message
         warnUser = willDataBeLost(tableRangesAsString, sheetname, columnShift)
     End If
     
+    'check whether the shift is to the left(-) or right(+) and store the number of shifts in a varible
     If columnShift < 0 Then
         abs_columnShift = columnShift * -1
     Else
         abs_columnShift = columnShift
     End If
     
+    'check if user is to be warned
     If warnUser = False Then
             Dim aRangeAsStr As Variant
+            'loop through the ranges
             For Each aRangeAsStr In tableRangesAsString
                 If aRangeAsStr <> vbNullString Then
+                    'shifting to the left
                     If columnShift < 0 Then
                         allowedShift = getNumberOfEmptyCellsAtTheStartOfRow(aRangeAsStr, sheetname)
                     Else
+                        'shifting to the right
                         If columnShift > 0 Then
                             allowedShift = getNumberOfEmptyCellsAtTheEndOfRow(aRangeAsStr, sheetname)
                         End If
@@ -44,7 +53,7 @@ Sub moveRanges_KeepWithinTableRanges(ByVal sheetname As String, ByVal columnShif
                             End If
                         End If
                         subAddress = getSubTableWithinRange(aRangeAsStr, sheetname)
-                        Call moveRange(sheetname, subTable, columnShift, 0)
+                        Call shiftData(sheetname, subTable, columnShift, 0)
                     End If
                 End If
             Next aRangeAsStr
@@ -82,7 +91,7 @@ Sub moveRanges_KeepWithinTableRanges(ByVal sheetname As String, ByVal columnShif
                         subAddress = getSubTableWithinRange(aRangeAsStr2, sheetname)
                         If subAddress <> vbNullString Then
                             Set subTable = .Range(subAddress)
-                            Call moveRange(sheetname, subTable, columnShift, 0)
+                            Call shiftData(sheetname, subTable, columnShift, 0)
                         End If
                     End If
                 End If
@@ -91,7 +100,7 @@ Sub moveRanges_KeepWithinTableRanges(ByVal sheetname As String, ByVal columnShif
     End If
   End With
 End Sub
-Sub moveRange(ByVal sheetname As String, ByRef rng As Range, ByVal columnShift As Integer, ByVal rowShift As Integer)
+Sub shiftData(ByVal sheetname As String, ByRef rng As Range, ByVal columnShift As Integer, ByVal rowShift As Integer)
     Worksheets(sheetname).Activate
     Dim noOfCells As Integer
     noOfCells = rng.Count
